@@ -1,11 +1,9 @@
-# Project: Data Lake
+# Project: Data Pipelines using Apache Airflow
 
 ## Description
 Sparkify is a music streaming company, and it's introducing more automation and monitoring to their DWH ETL pipelines 
-using Apache Airflow. This project creates high grade data pipelines - dynamic, built from the reusable tasks, capable
-of monitered, that allow easy backfills. It run tests against the datasets after the ETL steps to catch any discrepencies 
-in the datasets.
-
+using Apache Airflow. This project creates dynamic data pipelines which are built from the reusable tasks, moniters and allows 
+easy backfills. It run tests against the datasets after the ETL steps to catch any discrepencies in the datasets.
 
 ## Dataset
 Two datasets reside in S3, as per following links for each.
@@ -27,17 +25,27 @@ and running checks on the data.
 
 ![log_data](images/example-dag.jpg)
 
+
+## Operators
+
+1. Stage Operator
+2. Fact and Dimension Operators
+3. Data Quality Operator
+
 ## How to Run:
 
-1. Run the server and scheduler: 
+1. Run Airflow with Redshift
 
-root@134aff19a9c7:/home/workspace#/opt/airflow/start.sh
+2. Run the server and scheduler 
 
-2. 
+	root@134aff19a9c7:/home/workspace#/opt/airflow/start.sh
+    
+    Click Access Airflow to access UI
 
-## Database Design
+3. 
 
-### Star Schema
+## Database
+
 Using the song and event datasets, a star schema is created for performing queries on song play analysis. Star schema includes the following tables:
 
 ### Fact Tables    
@@ -48,8 +56,5 @@ Using the song and event datasets, a star schema is created for performing queri
     3. songs - song in music database
     4. artists - artists in music database
     5. time - timestamps of records in songplays
-
-songplays is a fact table and it has all the primary keys for other dimension tables - users, songs, artists, time.
-Look at the following diagram to see the columns and relationships between the tables.
 
 ![ERD1](images/ERD1.jpg)
