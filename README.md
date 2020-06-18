@@ -1,4 +1,4 @@
-# Project: Data Pipelines using Apache Airflow
+# Data Pipelines using Apache Airflow
 
 ## Description
 Sparkify is a music streaming company, and it's introducing more automation and monitoring to their DWH ETL pipelines 
@@ -26,11 +26,13 @@ and running checks on the data.
 ![log_data](images/example-dag.jpg)
 
 
-## Operators
+## Project Package
 
-1. Stage Operator
-2. Fact and Dimension Operators
-3. Data Quality Operator
+1. DAG template - all the imports and task templates 
+
+2. Operators - Stage, Fact and Dimension, Data Quality
+
+3. Helper Class - SQL trasformation 
 
 ## How to Run:
 
