@@ -1,9 +1,11 @@
 # Data Pipelines using Apache Airflow
 
 ## Description
-Sparkify is a music streaming company, and it's introducing more automation and monitoring to their DWH ETL pipelines 
-using Apache Airflow. This project creates dynamic data pipelines which are built from the reusable tasks, moniters and allows 
-easy backfills. It run tests against the datasets after the ETL steps to catch any discrepencies in the datasets.
+This project introduces more automation and monitoring data warehouse ETL pipelines using Apache Airflow for 
+the music streaming company, Sparkify.  It creates custom operators to perform tasks: staging the data, filling 
+the data warehouse, and running checks on the data to catch any discrepencies in the datasets.  The source data is 
+on S3 (consisting JSON logs about user activity in the music app and metadata regarding songs users listen).  
+This data is processed on data warehouse in the Amazon Redshift.
 
 ## Dataset
 Two datasets reside in S3, as per following links for each.
