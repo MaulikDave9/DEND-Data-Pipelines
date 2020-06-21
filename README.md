@@ -38,7 +38,7 @@ and running checks on the data.
 
 ## How to Run:
 
-1. Run Airflow with Redshift
+1. Create Amazon Redshift cluster 'redshift-cluster'
 
 2. Run the server and scheduler 
 
@@ -46,7 +46,7 @@ and running checks on the data.
     
     Click Access Airflow to access UI
 
-3. 
+3. Add Airflow connections - configure with AWS credentials and connection to Redshift
 
 ## Database
 
