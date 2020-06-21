@@ -11,7 +11,12 @@ from helpers import SqlQueries
 
 default_args = {
     'owner': 'udacity',
-    'start_date': datetime(2019, 1, 12),
+    'depends_on_past': False,            # DAG no dependencies on past run
+    'start_date': datetime(2019, 1, 12), 
+    'retries':  3,                       # on failure, task retired 3 times
+    'retry_delay': timedelta(minutes=5), # Retries happen every 5 minutes
+    'catchup_by_default': False,         # Catchup is turned off
+    'email_on_retry': False              # Do not email on retry
 }
 
 dag = DAG('sparkify_dag',
@@ -21,7 +26,11 @@ dag = DAG('sparkify_dag',
           max_active_runs= 1
         )
 
+# Four different operator will stage the data, tranform the data and run check on data quality
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
+
+# Stage operator will load any JSON formatted files from S3 to Amazon Redshift
+# it will create and run SQL COPY statement based on parameters. 
 
 stage_events_to_redshift = StageToRedshiftOperator(
     task_id='Stage_events',
