@@ -27,10 +27,10 @@ dag = DAG('sparkify_dag',
         )
 
 # Four different operator will stage the data, tranform the data and run check on data quality
-start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
-
-# Stage operator will load any JSON formatted files from S3 to Amazon Redshift
-# it will create and run SQL COPY statement based on parameters. 
+start_operator = DummyOperator(
+    task_id='Begin_execution', 
+    dag=dag
+)
 
 # References: https://knowledge.udacity.com/questions/215210
 
@@ -80,4 +80,11 @@ run_quality_checks = DataQualityOperator(
     dag=dag
 )
 
-end_operator = DummyOperator(task_id='Stop_execution',  dag=dag)
+end_operator = DummyOperator(
+    task_id='Stop_execution',  
+    dag=dag
+)
+
+start_operator >> stage_events_to_redshift
+start_operator >> stage_songs_to_redshift
+run_quality_checks >> end_operator
