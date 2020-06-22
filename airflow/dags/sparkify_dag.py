@@ -32,9 +32,17 @@ start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
 # Stage operator will load any JSON formatted files from S3 to Amazon Redshift
 # it will create and run SQL COPY statement based on parameters. 
 
+# References: https://knowledge.udacity.com/questions/215210
+
 stage_events_to_redshift = StageToRedshiftOperator(
     task_id='Stage_events',
-    dag=dag
+    dag=dag,
+    provide_context=True,
+    aws_conn_id='aws_credentials',
+    db_conn_id='redshift',
+    table='staging_events',
+    data_path='s3://udacity-dend/log_data',
+    jsonpaths_path= 's3://udacity-dend/log_json_path.json'
 )
 
 stage_songs_to_redshift = StageToRedshiftOperator(
