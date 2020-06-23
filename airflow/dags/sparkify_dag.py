@@ -33,16 +33,21 @@ start_operator = DummyOperator(
 )
 
 # References: https://knowledge.udacity.com/questions/215210
+# s3_key="log_data/{execution_date.year}/{execution_date.month}/{ds}-events.json",
 
 stage_events_to_redshift = StageToRedshiftOperator(
     task_id='Stage_events',
     dag=dag,
     provide_context=True,
     aws_conn_id='aws_credentials',
-    db_conn_id='redshift',
+    redshift_conn_id='redshift',
     table='staging_events',
-    data_path='s3://udacity-dend/log_data',
-    jsonpaths_path= 's3://udacity-dend/log_json_path.json'
+    s3_bucket= 'udacity_dend',
+    s3_key='log_data',
+    
+    #data_path='s3://udacity-dend/log_data',
+    json_path= 'log_json_path.json',
+    execution_date = "{{ ds }}"
 )
 
 stage_songs_to_redshift = StageToRedshiftOperator(

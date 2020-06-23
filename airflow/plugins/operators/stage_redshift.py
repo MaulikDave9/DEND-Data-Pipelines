@@ -16,6 +16,7 @@ class StageToRedshiftOperator(BaseOperator):
         FROM '{}'
         ACCESS_KEY_ID '{}'
         SECRET_ACCESS_KEY '{}'
+        IGNOREHEADER {}
         REGION 'us-west-2'
         JSON '{}'
     """
@@ -23,37 +24,48 @@ class StageToRedshiftOperator(BaseOperator):
     @apply_defaults
     def __init__(self,
                  # Oerators params (with defaults):
-                 aws_conn_id    = 'aws_credentials',
-                 db_conn_id     = 'redshift',
-                 table          = 'staging_table_name',
-                 data_path      = '',
-                 json_path      = 'auto',
-                 count_query    = """SELECT COUNT(*) FROM table_name;""",
+                 aws_conn_id          = 'aws_credentials',
+                 redshift_conn_id     = 'redshift',
+                 table                = 'staging_table_name',
+                 s3_bucket            = '',
+                 s3_key               = '',
+                 json_path            = 'auto',
+                 ignore_headers       = 1,
+                 count_query          = """SELECT COUNT(*) FROM table_name;""",
                  *args, **kwargs):
 
         super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
         # Map params:
-        self.aws_conn_id     = aws_conn_id
-        self.db_conn_id      = db_conn_id
-        self.table           = table
-        self.data_path       = data_path
-        self.json_path       = json_path
-        self.count_query     = count_query
+        self.aws_conn_id       = aws_conn_id
+        self.redshift_conn_id  = redshift_conn_id
+        self.ignore_headers    = ignore_headers
+        self.table             = table
+        self.s3_bucket         = s3_bucket
+        self.s3_key            = s3_key
+        self.json_path         = json_path
+        self.count_query       = count_query
 
     def execute(self, context):
         self.log.info('StageToRedshiftOperator execution')
-        aws_hook    = AwsHook(self.aws_conn_id)
-        credentials = aws_hook.get_credentials()
-        redshift    = PostgresHook(postgres_conn_id=self.db_conn_id)
+        aws_hook         = AwsHook(self.aws_conn_id)
+        credentials      = aws_hook.get_credentials()
+        redshift         = PostgresHook(postgres_conn_id=self.redshift_conn_id)
        
         self.log.info('Delete rows from table {}'.format(self.table))
         redshift.run('DELETE FROM {}'.format(self.table))
                       
-        self.log.info('Copy data from S3 to table {}'.format(self.table))
-        json_formatted_sql = StageToRedShiftOperator.copy_sql.format(
+        self.log.info('Copy data from S3 to Redshift')
+        s3_path = "s3://{}/{}".format(self.s3_bucket, self.s3_key)
+        if self.json_path != 'auto':
+             json_path = "s3://{}/{}".format(self.s3_bucket, self.json_path)
+        else:
+             json_path = self.json_path
+        
+        formatted_sql = StageToRedShiftOperator.copy_sql.format(
             self.table,
-            self.data_path,
+            s3_path,
             credentials.access_key,
             credentials.secret_key,
-            self.json_path)
-        redshift.run(json_formatted_sql)
+            self.ignore_headers,
+            json_path)
+        redshift.run(formatted_sql)
