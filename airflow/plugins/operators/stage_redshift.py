@@ -7,6 +7,8 @@ from airflow.contrib.hooks.aws_hook import AwsHook
 # Stage operator will load any JSON formatted files from S3 to Amazon Redshift
 # it will create and run SQL COPY statement based on parameters. 
 
+# Reference: https://knowledge.udacity.com/questions/204454
+
 class StageToRedshiftOperator(BaseOperator):
     ui_color = '#358140'
     
@@ -16,9 +18,9 @@ class StageToRedshiftOperator(BaseOperator):
         FROM '{}'
         ACCESS_KEY_ID '{}'
         SECRET_ACCESS_KEY '{}'
-        IGNOREHEADER {}
-        REGION 'us-west-2'
-        JSON '{}'
+        FORMAT AS JSON 'auto'
+        compudate off region 'us-west-2'
+        TIMEFORMAT AS 'epochmillisecs'
     """
 
     @apply_defaults
@@ -26,24 +28,19 @@ class StageToRedshiftOperator(BaseOperator):
                  # Oerators params (with defaults):
                  aws_conn_id          = 'aws_credentials',
                  redshift_conn_id     = 'redshift',
-                 table                = 'staging_table_name',
+                 table                = '',
                  s3_bucket            = '',
                  s3_key               = '',
-                 json_path            = 'auto',
-                 ignore_headers       = 1,
-                 count_query          = """SELECT COUNT(*) FROM table_name;""",
                  *args, **kwargs):
 
         super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
         # Map params:
         self.aws_conn_id       = aws_conn_id
         self.redshift_conn_id  = redshift_conn_id
-        self.ignore_headers    = ignore_headers
         self.table             = table
         self.s3_bucket         = s3_bucket
         self.s3_key            = s3_key
-        self.json_path         = json_path
-        self.count_query       = count_query
+  
 
     def execute(self, context):
         self.log.info('StageToRedshiftOperator execution')
@@ -55,17 +52,14 @@ class StageToRedshiftOperator(BaseOperator):
         redshift.run('DELETE FROM {}'.format(self.table))
                       
         self.log.info('Copy data from S3 to Redshift')
-        s3_path = "s3://{}/{}".format(self.s3_bucket, self.s3_key)
-        if self.json_path != 'auto':
-             json_path = "s3://{}/{}".format(self.s3_bucket, self.json_path)
-        else:
-             json_path = self.json_path
+        rendered_key = self.s3_key.format(**context)
+        s3_path = "s3://{}/{}".format(self.s3_bucket, rendered_key)
+        
         
         formatted_sql = StageToRedShiftOperator.copy_sql.format(
             self.table,
             s3_path,
             credentials.access_key,
-            credentials.secret_key,
-            self.ignore_headers,
-            json_path)
+            credentials.secret_key
+        )
         redshift.run(formatted_sql)

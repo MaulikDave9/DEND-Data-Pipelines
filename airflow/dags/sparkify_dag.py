@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import os
 from airflow import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.postgres_operator import PostgresOperator
 from airflow.operators import (StageToRedshiftOperator, LoadFactOperator,
                                 LoadDimensionOperator, DataQualityOperator)
 from helpers import SqlQueries
@@ -32,8 +33,20 @@ start_operator = DummyOperator(
     dag=dag
 )
 
+# TODO: create_tables.sql on redshift
+# Reference: https://knowledge.udacity.com/questions/60209
+#            https://knowledge.udacity.com/questions/109267
+create_tables_task = PostgresOperator(
+    task_id='create_tables',
+    dag=dag,
+    sql='create_tables.sql',
+    postgres_conn_id="redshift"
+)
+
 # References: https://knowledge.udacity.com/questions/215210
-# s3_key="log_data/{execution_date.year}/{execution_date.month}/{ds}-events.json",
+#             https://knowledge.udacity.com/questions/187917
+# s3_key="log_data/{execution_date.year}/{execution_date.month}/{ds}-events.json"
+# s3_key="log_data/{execution_date.year}/{execution_date.month:02}/{ds}-events.json",
 
 stage_events_to_redshift = StageToRedshiftOperator(
     task_id='Stage_events',
@@ -43,16 +56,19 @@ stage_events_to_redshift = StageToRedshiftOperator(
     redshift_conn_id='redshift',
     table='staging_events',
     s3_bucket= 'udacity_dend',
-    s3_key='log_data',
-    
-    #data_path='s3://udacity-dend/log_data',
-    json_path= 'log_json_path.json',
-    execution_date = "{{ ds }}"
+    s3_key='log_data', 
+    json_path='log_json_path.json'
 )
 
 stage_songs_to_redshift = StageToRedshiftOperator(
     task_id='Stage_songs',
-    dag=dag
+    dag=dag,
+    provide_context=True,
+    aws_conn_id='aws_credentials',
+    redshift_conn_id='redshift',
+    table='staging_songs',
+    s3_bucket='udacity-dend',
+    s3_key='song_data'
 )
 
 load_songplays_table = LoadFactOperator(
