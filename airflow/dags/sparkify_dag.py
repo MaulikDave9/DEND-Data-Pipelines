@@ -15,9 +15,9 @@ default_args = {
     'depends_on_past': False,            # DAG no dependencies on past run
     'start_date': datetime(2019, 1, 12), 
     'retries':  3,                       # on failure, task retired 3 times
-    'retry_delay': timedelta(minutes=5), # Retries happen every 5 minutes
-    'catchup_by_default': False,         # Catchup is turned off
-    'email_on_retry': False              # Do not email on retry
+    'retry_delay': timedelta(minutes=5), # retries happen every 5 minutes
+    'catchup_by_default': False,         # catchup is turned off
+    'email_on_retry': False              # do not email on retry
 }
 
 dag = DAG('sparkify_dag',
@@ -27,15 +27,13 @@ dag = DAG('sparkify_dag',
           max_active_runs= 1
         )
 
-# Four different operator will stage the data, tranform the data and run check on data quality
 start_operator = DummyOperator(
     task_id='Begin_execution', 
     dag=dag
 )
 
-# TODO: create_tables.sql on redshift
-# Reference: https://knowledge.udacity.com/questions/60209
-#            https://knowledge.udacity.com/questions/109267
+# create_tables.sql on redshift
+#Concern: will run every hour? IF NOT EXIST in create_table will prevent creating tables every run?
 create_tables_task = PostgresOperator(
     task_id='create_tables',
     dag=dag,
@@ -43,9 +41,10 @@ create_tables_task = PostgresOperator(
     postgres_conn_id="redshift"
 )
 
+# Four different operator will stage the data, tranform the data and run check on data quality
+
 # References: https://knowledge.udacity.com/questions/215210
 #             https://knowledge.udacity.com/questions/187917
-# s3_key="log_data/{execution_date.year}/{execution_date.month}/{ds}-events.json"
 # s3_key="log_data/{execution_date.year}/{execution_date.month:02}/{ds}-events.json",
 
 stage_events_to_redshift = StageToRedshiftOperator(
@@ -57,7 +56,10 @@ stage_events_to_redshift = StageToRedshiftOperator(
     table='staging_events',
     s3_bucket= 'udacity_dend',
     s3_key='log_data', 
-    json_path='log_json_path.json'
+    region='us-west-2',
+    file_type='JSON',
+    json_paths='log_json_path.json',
+    execution_date='{{ ds }}'
 )
 
 stage_songs_to_redshift = StageToRedshiftOperator(
@@ -68,7 +70,12 @@ stage_songs_to_redshift = StageToRedshiftOperator(
     redshift_conn_id='redshift',
     table='staging_songs',
     s3_bucket='udacity-dend',
-    s3_key='song_data'
+    s3_key='song_data',
+    region='us-west-2',
+    file_type='JSON',
+    json_paths='auto',
+    execution_date='{{ ds }}'
+
 )
 
 load_songplays_table = LoadFactOperator(

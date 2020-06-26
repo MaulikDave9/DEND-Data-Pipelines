@@ -11,16 +11,17 @@ from airflow.contrib.hooks.aws_hook import AwsHook
 
 class StageToRedshiftOperator(BaseOperator):
     ui_color = '#358140'
+    template_fields = ('s3_key','execution_date')
     
     # SQL template for JSON input format
-    copy_sql = """
+    copy_sql_json = """
         COPY {}
         FROM '{}'
         ACCESS_KEY_ID '{}'
-        SECRET_ACCESS_KEY '{}'
-        FORMAT AS JSON 'auto'
-        compudate off region 'us-west-2'
+        SECRET_ACCESS_KEY '{}' 
+        REGION 'us-west-2'
         TIMEFORMAT AS 'epochmillisecs'
+        FORMAT AS JSON {}
     """
 
     @apply_defaults
@@ -31,6 +32,9 @@ class StageToRedshiftOperator(BaseOperator):
                  table                = '',
                  s3_bucket            = '',
                  s3_key               = '',
+                 file_type            = '',
+                 json_paths           = '',
+                 execution_date       = '',
                  *args, **kwargs):
 
         super(StageToRedshiftOperator, self).__init__(*args, **kwargs)
@@ -40,26 +44,44 @@ class StageToRedshiftOperator(BaseOperator):
         self.table             = table
         self.s3_bucket         = s3_bucket
         self.s3_key            = s3_key
-  
+        self.file_type         = file_type
+        self.json_paths        = json_paths
+        self.execution_date    = execution_date  
 
     def execute(self, context):
         self.log.info('StageToRedshiftOperator execution')
         aws_hook         = AwsHook(self.aws_conn_id)
         credentials      = aws_hook.get_credentials()
         redshift         = PostgresHook(postgres_conn_id=self.redshift_conn_id)
+        self.log.info('Created Redshift connection')
        
         self.log.info('Delete rows from table {}'.format(self.table))
         redshift.run('DELETE FROM {}'.format(self.table))
                       
         self.log.info('Copy data from S3 to Redshift')
+        rendered_date        = self.execution_date.format(**context)
+        rendered_date_object = datetime.datetime.strptime(rendered_date,'%Y-%m-%d')
+        
         rendered_key = self.s3_key.format(**context)
         s3_path = "s3://{}/{}".format(self.s3_bucket, rendered_key)
         
+        if self.json_paths == '':
+            s3_json_path = 'auto'
+        else:
+            s3_json_path = "s3://{}/{}".format(self.s3_bucket, self.json_paths)
         
-        formatted_sql = StageToRedShiftOperator.copy_sql.format(
-            self.table,
-            s3_path,
-            credentials.access_key,
-            credentials.secret_key
-        )
+        self.log.info('s3_path: {}'.format(s3_path))
+        self.log.ingo('s3_json_path: {}'.format(s3_json_path))
+        
+        if self.file_type == 'json':
+           
+            formatted_sql = StageToRedShiftOperator.copy_sql_json.format(
+                self.table,
+                s3_path,
+                credentials.access_key,
+                credentials.secret_key,
+                s3_json_path
+            )
         redshift.run(formatted_sql)
+        
+        self.log.info('WOW! Redshift Copy was success!!')
