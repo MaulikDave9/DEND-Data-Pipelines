@@ -10,6 +10,10 @@ from helpers import SqlQueries
 # AWS_KEY = os.environ.get('AWS_KEY')
 # AWS_SECRET = os.environ.get('AWS_SECRET')
 
+# DAG can be browsed from Airflow UI
+
+# DAG contains default_args dict, with the following key:
+# Owner, Depends_on_past, Start_date, Retries, Retry_delay, Catchup
 default_args = {
     'owner': 'udacity',
     'depends_on_past': False,            # DAG no dependencies on past run
@@ -20,12 +24,17 @@ default_args = {
     'email_on_retry': False              # do not email on retry
 }
 
+# defaults_args are bind to the DAG which is scheduled to run once an hour
 dag = DAG('sparkify_dag',
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
           schedule_interval='@hourly',
           max_active_runs= 1
         )
+
+
+# The dag follows the data flow per project specifications, the tasks have a dependency and 
+# DAG begins with a begin_execution task and ends with a end_execution task
 
 start_operator = DummyOperator(
     task_id='Begin_execution', 
@@ -45,8 +54,10 @@ create_tables_task = PostgresOperator(
 
 # References: https://knowledge.udacity.com/questions/215210
 #             https://knowledge.udacity.com/questions/187917
-# s3_key="log_data/{execution_date.year}/{execution_date.month:02}/{ds}-events.json",
+# s3_key="log_data/{execution_date.year}/{execution_date.month:02}/{ds}-events.json" 
 
+# Task to stage data from S3 to Redshift
+# It uses params to generate the copy statement dynamically
 stage_events_to_redshift = StageToRedshiftOperator(
     task_id='Stage_events',
     dag=dag,
@@ -112,6 +123,8 @@ end_operator = DummyOperator(
     task_id='Stop_execution',  
     dag=dag
 )
+
+# tasks dependency
 
 start_operator >> stage_events_to_redshift
 start_operator >> stage_songs_to_redshift

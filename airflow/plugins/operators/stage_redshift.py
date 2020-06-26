@@ -49,6 +49,10 @@ class StageToRedshiftOperator(BaseOperator):
         self.execution_date    = execution_date  
 
     def execute(self, context):
+        
+        # logging different steps of execution
+        # SQL statements are executed by using a Airflow hook
+        
         self.log.info('StageToRedshiftOperator execution')
         aws_hook         = AwsHook(self.aws_conn_id)
         credentials      = aws_hook.get_credentials()
