@@ -13,6 +13,18 @@ class StageToRedshiftOperator(BaseOperator):
     ui_color = '#358140'
     template_fields = ('s3_key','execution_date')
     
+    # SQL template for csv input format
+    copy_sql_csv = """
+        COPY {}
+        FROM '{}'
+        ACCESS_KEY_ID '{}'
+        SECRET_ACCESS_KEY '{}' 
+        IGNOREHEADER {}
+        DELIMITER    '{}'
+        REGION 'us-west-2'
+        TIMEFORMAT AS 'epochmillisecs'
+    """
+    
     # SQL template for JSON input format
     copy_sql_json = """
         COPY {}
@@ -34,6 +46,8 @@ class StageToRedshiftOperator(BaseOperator):
                  s3_key               = '',
                  file_type            = '',
                  json_paths           = '',
+                 ignore_headers       =  1,
+                 delimiter            = ',',
                  execution_date       = '',
                  *args, **kwargs):
 
@@ -46,12 +60,15 @@ class StageToRedshiftOperator(BaseOperator):
         self.s3_key            = s3_key
         self.file_type         = file_type
         self.json_paths        = json_paths
+        self.ignore_headers    = ignore_headers
+        self.delimiter         = delimiter,
         self.execution_date    = execution_date  
 
     def execute(self, context):
         
         # logging different steps of execution
         # SQL statements are executed by using a Airflow hook
+        # s3_key="log_data/{execution_date.year}/{execution_date.month:02}/{ds}-events.json" 
         
         self.log.info('StageToRedshiftOperator execution')
         aws_hook         = AwsHook(self.aws_conn_id)
@@ -77,14 +94,23 @@ class StageToRedshiftOperator(BaseOperator):
         self.log.info('s3_path: {}'.format(s3_path))
         self.log.ingo('s3_json_path: {}'.format(s3_json_path))
         
+        # Assumption: only JSON and CSV file types.
         if self.file_type == 'json':
-           
             formatted_sql = StageToRedShiftOperator.copy_sql_json.format(
                 self.table,
                 s3_path,
                 credentials.access_key,
                 credentials.secret_key,
                 s3_json_path
+            )
+        else: 
+            formatted_sql = StageToRedShiftOperator.copy_sql_csv.format(
+                self.table,
+                s3_path,
+                credentials.access_key,
+                credentials.secret_key,
+                self.ignore_headers,
+                self.delimiter,
             )
         redshift.run(formatted_sql)
         
