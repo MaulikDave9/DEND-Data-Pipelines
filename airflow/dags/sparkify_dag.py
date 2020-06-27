@@ -41,14 +41,14 @@ start_operator = DummyOperator(
     dag=dag
 )
 
-# create_tables.sql on redshift
+# create tables on redshift using DAG
 #Concern: will run every hour? IF NOT EXIST in create_table will prevent creating tables every run?
-#create_tables_task = PostgresOperator(
-#    task_id='create_tables',
-#    dag=dag,
-#    sql='create_tables.sql',
-#    postgres_conn_id="redshift"
-#)
+create_tables_task = PostgresOperator(
+    task_id='create_tables',
+    dag=dag,
+    sql='create_tables.sql',
+    postgres_conn_id="redshift"
+)
 
 # Four different operator will stage the data, tranform the data and run check on data quality
 
