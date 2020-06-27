@@ -43,21 +43,19 @@ start_operator = DummyOperator(
 
 # create_tables.sql on redshift
 #Concern: will run every hour? IF NOT EXIST in create_table will prevent creating tables every run?
-create_tables_task = PostgresOperator(
-    task_id='create_tables',
-    dag=dag,
-    sql='create_tables.sql',
-    postgres_conn_id="redshift"
-)
+#create_tables_task = PostgresOperator(
+#    task_id='create_tables',
+#    dag=dag,
+#    sql='create_tables.sql',
+#    postgres_conn_id="redshift"
+#)
 
 # Four different operator will stage the data, tranform the data and run check on data quality
 
 # References: https://knowledge.udacity.com/questions/215210
 #             https://knowledge.udacity.com/questions/187917
-# s3_key="log_data/{execution_date.year}/{execution_date.month:02}/{ds}-events.json" 
 
-# Task to stage data from S3 to Redshift
-# It uses params to generate the copy statement dynamically
+# Task to stage event data from S3 to Redshift
 stage_events_to_redshift = StageToRedshiftOperator(
     task_id='Stage_events',
     dag=dag,
@@ -73,6 +71,7 @@ stage_events_to_redshift = StageToRedshiftOperator(
     execution_date='{{ ds }}'
 )
 
+# Task to stage song data from S3 to Redshift
 stage_songs_to_redshift = StageToRedshiftOperator(
     task_id='Stage_songs',
     dag=dag,
