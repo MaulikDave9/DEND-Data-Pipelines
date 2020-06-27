@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS public.time(
 	"week" int4,
 	"month" int4,
 	"year" int4,
-	"dayofweek" int4
+	"dayofweek" int4,
 	CONSTRAINT time_pkey PRIMARY KEY (start_time)
 );
 
