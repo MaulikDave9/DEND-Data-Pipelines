@@ -47,7 +47,7 @@ class StageToRedshiftOperator(BaseOperator):
                  s3_key               = '',
                  file_type            = '',
                  json_paths           = '',
-                 ignore_headers       =  1,
+                 ignore_header        = 1,
                  delimiter            = ',',
                  execution_date       = '',
                  *args, **kwargs):
@@ -61,8 +61,8 @@ class StageToRedshiftOperator(BaseOperator):
         self.s3_key            = s3_key
         self.file_type         = file_type
         self.json_paths        = json_paths
-        self.ignore_headers    = ignore_headers
-        self.delimiter         = delimiter,
+        self.ignore_header     = ignore_header
+        self.delimiter         = delimiter
         self.execution_date    = execution_date  
 
     def execute(self, context):
@@ -109,7 +109,7 @@ class StageToRedshiftOperator(BaseOperator):
                 s3_path,
                 credentials.access_key,
                 credentials.secret_key,
-                self.ignore_headers,
+                self.ignore_header,
                 self.delimiter
             )
         redshift.run(formatted_sql)
