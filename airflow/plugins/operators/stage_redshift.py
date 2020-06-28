@@ -97,15 +97,14 @@ class StageToRedshiftOperator(BaseOperator):
         
         # Assumption: only JSON and CSV file types.
         if self.file_type == 'json':
-            formatted_sql = StageToRedShiftOperator.copy_sql_json.format(
+            formatted_sql = StageToRedshiftOperator.copy_sql_json.format(
                 self.table,
-                s3_path,
                 credentials.access_key,
                 credentials.secret_key,
                 s3_json_path
             )
         else: 
-            formatted_sql = StageToRedShiftOperator.copy_sql_csv.format(
+            formatted_sql = StageToRedshiftOperator.copy_sql_csv.format(
                 self.table,
                 s3_path,
                 credentials.access_key,
