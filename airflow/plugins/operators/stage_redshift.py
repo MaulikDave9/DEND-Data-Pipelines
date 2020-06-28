@@ -93,7 +93,7 @@ class StageToRedshiftOperator(BaseOperator):
             s3_json_path = "s3://{}/{}".format(self.s3_bucket, self.json_paths)
         
         self.log.info('s3_path: {}'.format(s3_path))
-        self.log.ingo('s3_json_path: {}'.format(s3_json_path))
+        self.log.info('s3_json_path: {}'.format(s3_json_path))
         
         # Assumption: only JSON and CSV file types.
         if self.file_type == 'json':
