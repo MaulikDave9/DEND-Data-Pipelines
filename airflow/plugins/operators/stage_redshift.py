@@ -23,7 +23,7 @@ class StageToRedshiftOperator(BaseOperator):
         IGNOREHEADER {}
         DELIMITER    '{}'
         REGION 'us-west-2'
-        TIMEFORMAT AS 'epochmillisecs'
+        COMPUDATE OFF;
     """
     
     # SQL template for JSON input format
@@ -33,8 +33,8 @@ class StageToRedshiftOperator(BaseOperator):
         ACCESS_KEY_ID '{}'
         SECRET_ACCESS_KEY '{}' 
         REGION 'us-west-2'
-        TIMEFORMAT AS 'epochmillisecs'
-        FORMAT AS JSON {}
+        JSON '{}'
+        COMPUDATE OFF;
     """
 
     @apply_defaults
@@ -81,8 +81,8 @@ class StageToRedshiftOperator(BaseOperator):
         redshift.run('DELETE FROM {}'.format(self.table))
                       
         self.log.info('Copy data from S3 to Redshift')
-        rendered_date        = self.execution_date.format(**context)
-        rendered_date_object = datetime.datetime.strptime(rendered_date,'%Y-%m-%d')
+        #rendered_date        = self.execution_date.format(**context)
+        #rendered_date_object = datetime.datetime.strptime(rendered_date,'%Y-%m-%d')
         
         rendered_key = self.s3_key.format(**context)
         s3_path = "s3://{}/{}".format(self.s3_bucket, rendered_key)
@@ -96,7 +96,7 @@ class StageToRedshiftOperator(BaseOperator):
         self.log.info('s3_json_path: {}'.format(s3_json_path))
         
         # Assumption: only JSON and CSV file types.
-        if self.file_type == 'json':
+        if self.file_type == 'JSON':
             formatted_sql = StageToRedshiftOperator.copy_sql_json.format(
                 self.table,
                 credentials.access_key,
