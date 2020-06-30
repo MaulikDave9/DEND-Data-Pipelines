@@ -67,6 +67,8 @@ Using the song and event datasets, a star schema is created for performing queri
 ![ERD1](images/ERD1.jpg)
 
 #### References: 
-	(1) https://knowledge.udacity.com/questions/215210
-	(2) https://knowledge.udacity.com/questions/187917
-	(3) https://knowledge.udacity.com/questions/204454
+	https://docs.aws.amazon.com/redshift/latest/dg/r_COPY_command_examples.html#copy-from-json-examples-using-auto
+	https://knowledge.udacity.com/questions/215210
+	https://knowledge.udacity.com/questions/187917
+	https://knowledge.udacity.com/questions/204454
+	https://github.com/jaycode
